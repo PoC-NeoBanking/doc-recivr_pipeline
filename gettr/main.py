@@ -8,10 +8,11 @@ from bs4 import BeautifulSoup
 
 
 # Constants
-SNAPSHOT_FILE = 'snapshot.html'
-DOCS_DIRECTORY = 'downloaded_docs'
-SERVER_URL = 'http://localhost:80'  # Replace with your server URL
-RECEIVER_URL = 'https://webhook.site/c8f7f245-fae9-43d5-a43b-c61709387768'  # Replace with your receiver URL
+PORT = os.environ.get('PORT', 2000)
+SNAPSHOT_FILE = './data/snapshot.html'
+DOCS_DIRECTORY = './data/downloaded_docs'
+SERVER_URL = 'http://localhost:1000'
+RECEIVER_URL = os.environ.get('RECEIVER_URL', 'http://localhost:3000')
 
 
 async def fetch_html(url):
@@ -84,4 +85,4 @@ if __name__ == '__main__':
     os.makedirs(DOCS_DIRECTORY, exist_ok=True)
 
     gettr = create_gettr()
-    web.run_app(gettr, port=100)
+    web.run_app(gettr, port=PORT)

@@ -2,6 +2,8 @@ from aiohttp import web
 import os
 import asyncio
 
+# Constants
+PORT = os.environ.get('PORT', 1000)
 DIRECTORY = "./docs"
 
 async def list_documents(request):
@@ -70,7 +72,7 @@ async def init_app():
     app.router.add_post('/clear', clear_documents)
     return app
 
-def run_servr(port:int = 80) -> None:
+def run_servr(port:int = PORT) -> None:
     if not os.path.exists(DIRECTORY):
         os.makedirs(DIRECTORY)
     

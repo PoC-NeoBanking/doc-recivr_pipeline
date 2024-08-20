@@ -91,8 +91,8 @@ def create_pdf(offset_amount: int) -> None:
             case 3:
                 pdf.multi_cell(0, 10, text)
     
-    if not os.path.exists("docs"):
-        os.makedirs("docs")
+    if not os.path.exists("./docs"):
+        os.makedirs("./docs")
     
     current_time = datetime.now()
     # Changing creation time of docs so in case of multiple docs created name would not be same

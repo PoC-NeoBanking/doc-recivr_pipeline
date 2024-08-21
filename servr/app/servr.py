@@ -3,7 +3,7 @@ import os
 import asyncio
 
 # Constants
-PORT = os.environ.get('PORT', 1000)
+PORT = int(os.environ.get('PORT', 1000))
 DIRECTORY = "./docs"
 
 async def list_documents(request):

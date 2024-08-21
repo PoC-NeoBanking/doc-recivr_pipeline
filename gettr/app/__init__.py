@@ -1,0 +1,1 @@
+from app.gettr import run_gettr

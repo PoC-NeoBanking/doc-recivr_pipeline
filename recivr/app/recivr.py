@@ -4,7 +4,7 @@ from os import environ
 import datetime
 
 
-PORT = environ.get("PORT", 3000)
+PORT = int(environ.get("PORT", 3000))
 
 # A list to store all POST requests data
 requests_data = []

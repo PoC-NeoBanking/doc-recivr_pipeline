@@ -1,0 +1,99 @@
+You are provided with a large text block, which contains various hidden phrases related to financial terms. Your task is to extract these specific phrases and categorize them into distinct groups based on their context. Each category should be meaningful and reflect the nature of the financial changes or actions described in the phrase.
+
+    Categories to Consider:
+
+1. Interest Rates:
+    Extract phrases related to changes in interest rates for loans, mortgages, savings accounts, etc.
+    Examples: 
+        "The interest rate will be adjusted by {n} percent."
+        "Mortgage rates will decrease by {n} percent next quarter."
+        "Savings account interest rates will be adjusted by {n} percent."
+
+2. Credit and Loan Terms:
+    Extract phrases related to credit limits, loan terms, and changes in credit policies.
+    Examples:
+        "The loan term will be extended by {n} years."
+        "The maximum credit limit will be raised by {n_dollars} dollars."
+        "New credit policies will lower the interest rate by {n} percent."
+
+3. Fees and Charges:
+    Extract phrases concerning transaction fees, annual fees, and other bank charges.
+    Examples:
+        "Transaction fees will be reduced by {n} percent for online banking."
+        "Bank transfer fees will be waived for amounts exceeding {n_dollars} dollars."
+        "Annual fees for credit cards will decrease by {n} percent."
+
+4. Deposit and Withdrawal Limits:
+    Extract phrases related to limits on deposits, withdrawals, and related insurance coverage.
+    Examples:
+        "Deposit insurance coverage will be extended by {n_dollars} dollars."
+        "ATM withdrawal limits will be increased by {n_dollars} dollars."
+
+5. Regulatory and Policy Changes:
+    Extract phrases that mention changes in banking regulations, processing times, or policies.
+    Examples:
+        "New banking regulations will reduce processing times by {n_days} days."
+        "New credit policies will lower the interest rate by {n} percent."
+
+6. Incentives and Rewards:
+    Extract phrases related to rewards, cashback rates, and other customer incentives.
+    Examples:
+        "Cashback rates on purchases will rise by {n} percent."
+
+	Output Format:
+
+The extracted phrases should be organized into a JSON object, where each category is a key, and the corresponding phrases are listed as values in an array.
+
+Example Output:
+{
+    "Interest Rates": [
+        "The interest rate will be adjusted by 5 percent.",
+        "Mortgage rates will decrease by 2 percent next quarter."
+    ],
+    "Credit and Loan Terms": [
+        "The loan term will be extended by 3 years.",
+        "The maximum credit limit will be raised by 5000 dollars."
+    ],
+    "Fees and Charges": [
+        "Transaction fees will be reduced by 1 percent for online banking.",
+        "Annual fees for credit cards will decrease by 10 percent."
+    ],
+    "Deposit and Withdrawal Limits": [
+        "Deposit insurance coverage will be extended by 10000 dollars.",
+        "ATM withdrawal limits will be increased by 200 dollars."
+    ],
+    "Regulatory and Policy Changes": [
+        "New banking regulations will reduce processing times by 3 days."
+    ],
+    "Incentives and Rewards": [
+        "Cashback rates on purchases will rise by 2 percent."
+    ]
+}
+
+	Additional Instructions:
+1. Ignore any text that does not match the pattern of the provided phrases.
+2. If the phrase includes variables (e.g., {n} or {n_dollars}), assume they have been replaced with actual values in the text and return the phrase as-is.
+3. Be thorough in ensuring all relevant phrases are extracted and correctly categorized.
+4. If there is no phrases that match a certain category, you need to return "None" in your output of this category.
+    Example:
+    {
+    "Interest Rates": [
+        "The interest rate will be adjusted by 5 percent."
+    ],
+    "Credit and Loan Terms": [
+        "The maximum credit limit will be raised by 5000 dollars."
+    ],
+    "Fees and Charges": [
+        "Transaction fees will be reduced by 1 percent for online banking.",
+        "Annual fees for credit cards will decrease by 10 percent."
+    ],
+    "Deposit and Withdrawal Limits": "None",
+    "Regulatory and Policy Changes": [
+        "New banking regulations will reduce processing times by 3 days."
+    ],
+    "Incentives and Rewards": "None"
+}
+
+
+Your text to filter:
+$TEXT

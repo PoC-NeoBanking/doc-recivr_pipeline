@@ -1,17 +1,35 @@
 version: '3.8'
 
 services:
-  ollama:
-    image: ollama/ollama
-    container_name: ollama
+  gettr:
+    build:
+      context: ./gettr
+      dockerfile: Dockerfile
+    container_name: gettr
+    environment:
+      - OLLAMA_CONNECTION_STR=http://ollama:11434
+      - SERVER_URL=http://servr:1000
+      - RECEIVER_URL=http://recivr:3000
+      - API_KEY=${API_KEY}
     ports:
-      - "11434:11434"
+      - "2000:2000"
     volumes:
-      - ./DATA/ollama_data:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      - ./DATA/gettr:/usr/src/app/data
+
+  recivr:
+    build:
+      context: ./recivr
+      dockerfile: Dockerfile
+    container_name: recivr
+    ports:
+      - "3000:3000"
+
+  servr:
+    build:
+      context: ./servr
+      dockerfile: Dockerfile
+    container_name: servr
+    ports:
+      - "1000:1000"
+    volumes:
+      - ./DATA/servr:/usr/src/app/docs

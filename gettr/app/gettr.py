@@ -8,10 +8,8 @@ import functools
 from bs4 import BeautifulSoup
 import pathlib
 import json
-import ollama
-import httpx
-import time
 import fitz
+import lamini
 
 
 # Constants
@@ -20,9 +18,8 @@ SNAPSHOT_FILE = './data/snapshot.html'
 DOCS_DIRECTORY = './data/downloaded_docs'
 SERVER_URL = os.environ.get('SERVER_URL', 'http://localhost:1000')
 RECEIVER_URL = os.environ.get('RECEIVER_URL', 'http://localhost:3000')
-OLLAMA_CONNECTION_STR = os.environ.get("OLLAMA_CONNECTION_STR", "http://localhost:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
 PROMPT_TEMPLATE_PATH = os.environ.get("PROMPT_TEMPLATE_PATH", "./app/prompt.txt")
+API_KEY = os.environ.get("API_KEY")
 
 
 async def fetch_html(url):
@@ -54,28 +51,7 @@ async def notify_receiver(data):
     async with aiohttp.ClientSession() as session:
         await session.post(RECEIVER_URL, json=data)
 
-def wait_for_ollama(ollama_client):
-    tries = 10
-    while True:
-        try:
-            ollama_client.ps()
-            break
-        except httpx.HTTPError:
-            if tries:
-                tries -= 1
-                time.sleep(1)
-            else:
-                raise
-
-def download_model(ollama_client, model):
-    existing_models = [model["name"] for model in ollama_client.list()["models"]]
-    if model not in existing_models:
-        print(f"Model not found locally, downloading: {model}")
-        ollama_client.pull(model)
-    else:
-        print(f"Model: {model} found locally")
-
-async def classify_pdf(file_path, prompt_template, ollama_client):
+async def classify_pdf(file_path, prompt_template, llm):
 
     # Extract the file name from the file path
     file_name = os.path.basename(file_path)
@@ -94,20 +70,16 @@ async def classify_pdf(file_path, prompt_template, ollama_client):
 
 
     # Call the Ollama client to generate a response
-    api_response = ollama_client.generate(
-        model=OLLAMA_MODEL,
-        prompt=prompt,
-        format="json",
-        stream=False,
-    )
+    api_response = llm.generate(f"<|begin_of_text|><|start_header_id|>user<|end_header_id|>{prompt}<|eot_id|>\
+                                <|start_header_id|>assistant<|end_header_id|>")
 
     # Parse the response and add the file name to the JSON
-    response = json.loads(api_response["response"])
+    response = json.loads(api_response)
     response["file_name"] = file_name
     
     return response
 
-async def compare_and_download(ollama_client, prompt_template):
+async def compare_and_download(llm, prompt_template):
     try:
         current_html = await fetch_html(SERVER_URL)
         previous_html = await load_snapshot()
@@ -129,7 +101,7 @@ async def compare_and_download(ollama_client, prompt_template):
                 file_paths = await asyncio.gather(*tasks)
 
                 for file_path in filter(None, file_paths):
-                    response_json = await classify_pdf(file_path, prompt_template, ollama_client)
+                    response_json = await classify_pdf(file_path, prompt_template, llm)
                     await notify_receiver(response_json)
 
             await notify_receiver({"message": "Task completed: Documents downloaded, processed, and snapshot updated"})
@@ -139,22 +111,21 @@ async def compare_and_download(ollama_client, prompt_template):
     except Exception as e:
         await notify_receiver({"error": str(e)})
 
-async def start_scheduler(ollama_client, prompt_template):
+async def start_scheduler(llm, prompt_template):
     scheduler = AsyncIOScheduler()
-    cand = functools.partial(compare_and_download, ollama_client, prompt_template)
+    cand = functools.partial(compare_and_download, llm, prompt_template)
     scheduler.add_job(cand, 'interval', minutes=1)
     scheduler.start()
 
 async def create_gettr():
     os.makedirs(DOCS_DIRECTORY, exist_ok=True)
 
-    ollama_client = ollama.Client(host=OLLAMA_CONNECTION_STR)
-    wait_for_ollama(ollama_client)
-    download_model(ollama_client, OLLAMA_MODEL)
+    lamini.api_key = API_KEY
+    llm = lamini.Lamini("meta-llama/Meta-Llama-3.1-8B-Instruct")
     prompt_template = pathlib.Path(PROMPT_TEMPLATE_PATH).read_text()
 
-    await start_scheduler(ollama_client, prompt_template)
-    await compare_and_download(ollama_client, prompt_template)
+    await start_scheduler(llm, prompt_template)
+    await compare_and_download(llm, prompt_template)
 
     app = web.Application()
 

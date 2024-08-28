@@ -8,6 +8,7 @@ WORKDIR /usr/src/app
 COPY requirements.txt ./
 
 # Install any needed packages specified in requirements.txt
+RUN apt-get update && apt-get install -y gcc
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
@@ -19,8 +20,6 @@ ENV PORT=2000
 EXPOSE ${PORT}
 
 # Set environment variables for Ollama connection and other constants
-ENV OLLAMA_CONNECTION_STR=http://localhost:11434
-ENV OLLAMA_MODEL=llama3.1:8b
 ENV PROMPT_TEMPLATE_PATH=./app/prompt.txt
 ENV SERVER_URL=http://localhost:1000
 ENV RECEIVER_URL=http://localhost:3000

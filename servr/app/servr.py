@@ -28,7 +28,7 @@ async def create_new_document(request):
         if a and a.isdigit() and int(a) > 0:
             # Run the document creation script
             process = await asyncio.create_subprocess_exec(
-                'py', './app/doc_creator.py', '-a', a,
+                'python', './app/doc_creator.py', '-a', a,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )

@@ -71,10 +71,11 @@ Example Output:
 }
 
 	Additional Instructions:
-1. Ignore any text that does not match the pattern of the provided phrases.
-2. If the phrase includes variables (e.g., {n} or {n_dollars}), assume they have been replaced with actual values in the text and return the phrase as-is.
-3. Be thorough in ensuring all relevant phrases are extracted and correctly categorized.
-4. If there is no phrases that match a certain category, you need to return "None" in your output of this category.
+1. DO NOT ouptut any text aside of requested JSON. No comments, no explanations, etc.
+2. Ignore any text that does not match the pattern of the provided phrases.
+3. If the phrase includes variables (e.g., {n} or {n_dollars}), assume they have been replaced with actual values in the text and return the phrase as-is.
+4. Be thorough in ensuring all relevant phrases are extracted and correctly categorized.
+5. If there is no phrases that match a certain category, you need to return "None" in your output of this category.
     Example:
     {
     "Interest Rates": [

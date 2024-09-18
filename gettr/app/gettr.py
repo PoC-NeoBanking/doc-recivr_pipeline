@@ -20,7 +20,22 @@ SERVER_URL = os.environ.get('SERVER_URL', 'http://localhost:1000')
 RECEIVER_URL = os.environ.get('RECEIVER_URL', 'http://localhost:3000')
 PROMPT_TEMPLATE_PATH = os.environ.get("PROMPT_TEMPLATE_PATH", "./app/prompt.txt")
 API_KEY = os.environ.get("API_KEY")
+CLASSIFIED_PDFS_FILE = './data/classified_pdfs.json'
 
+
+async def load_classified_pdfs():
+    try:
+        async with aiofiles.open(CLASSIFIED_PDFS_FILE, 'r') as f:
+            content = await f.read()
+            return json.loads(content)
+    except FileNotFoundError:
+        return []
+    except json.JSONDecodeError:
+        return []
+
+async def save_classified_pdfs(classified_pdfs):
+    async with aiofiles.open(CLASSIFIED_PDFS_FILE, 'w') as f:
+        await f.write(json.dumps(classified_pdfs, indent=4))
 
 async def fetch_html(url):
     async with aiohttp.ClientSession() as session:
@@ -51,31 +66,31 @@ async def notify_receiver(data):
     async with aiohttp.ClientSession() as session:
         await session.post(RECEIVER_URL, json=data)
 
-async def classify_pdf(file_path, prompt_template, llm):
-
-    # Extract the file name from the file path
+async def classify_pdf(file_path, prompt_template, llm, classified_pdfs):
     file_name = os.path.basename(file_path)
     
-    # Read the PDF text
+    # Skip if already classified
+    if file_name in classified_pdfs:
+        return {"message": f"File {file_name} already classified."}
+    
     pdf_text = ""
     async with aiofiles.open(file_path, 'rb') as f:
         pdf_data = await f.read()
-        # Use PyMuPDF to extract text
         pdf_document = fitz.open(stream=pdf_data, filetype="pdf")
         for page in pdf_document:
             pdf_text += page.get_text()
 
-    # Prepare the prompt by replacing the placeholder with the actual PDF text
     prompt = prompt_template.replace("$TEXT", pdf_text)
 
-
-    # Call the Ollama client to generate a response
     api_response = llm.generate(f"<|begin_of_text|><|start_header_id|>user<|end_header_id|>{prompt}<|eot_id|>\
                                 <|start_header_id|>assistant<|end_header_id|>")
 
-    # Parse the response and add the file name to the JSON
     response = json.loads(api_response)
     response["file_name"] = file_name
+    
+    # Mark as classified
+    classified_pdfs.append(file_name)
+    await save_classified_pdfs(classified_pdfs)
     
     return response
 
@@ -90,6 +105,8 @@ async def compare_and_download(llm, prompt_template):
             soup = BeautifulSoup(current_html, 'html.parser')
             links = soup.find_all('a', href=True)
 
+            classified_pdfs = await load_classified_pdfs()
+
             async with aiohttp.ClientSession() as session:
                 tasks = []
                 for link in links:
@@ -101,7 +118,7 @@ async def compare_and_download(llm, prompt_template):
                 file_paths = await asyncio.gather(*tasks)
 
                 for file_path in filter(None, file_paths):
-                    response_json = await classify_pdf(file_path, prompt_template, llm)
+                    response_json = await classify_pdf(file_path, prompt_template, llm, classified_pdfs)
                     await notify_receiver(response_json)
 
             await notify_receiver({"message": "Task completed: Documents downloaded, processed, and snapshot updated"})

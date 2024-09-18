@@ -7,7 +7,6 @@ services:
       dockerfile: Dockerfile
     container_name: gettr
     environment:
-      - OLLAMA_CONNECTION_STR=http://ollama:11434
       - SERVER_URL=http://servr:1000
       - RECEIVER_URL=http://recivr:3000
       - API_KEY=${API_KEY}
